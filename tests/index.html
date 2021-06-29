@@ -1,0 +1,20 @@
+<html>
+    <head>
+    </head>
+    <body>
+	<script type="text/javascript" src="../dist/entity-architect.bundled.js"></script>
+
+	<script type="text/javascript">
+	  let {
+	      Architecture,
+	      EntityType,
+	  } = EntityArchitect;
+
+	  const SomeType = new EntityType("some_entry_type");
+	  const schema = new Architecture([
+	      SomeType,
+	  ]);
+	  console.log( schema, SomeType );
+	</script>
+    </body>
+</html>
