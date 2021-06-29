@@ -7,6 +7,7 @@ const expect				= require('chai').expect;
 const { Architecture,
 	EntityType,
 	Entity,
+	Collection,
 	EntityArchitectError,
 	UnregisteredTypeError,
 	UnregisteredModelError,
@@ -31,6 +32,7 @@ SomeType.model("info", function (content) {
 });
 
 const SomeOtherType			= new EntityType("some_other_entry_type");
+SomeOtherType.model("noop");
 
 const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf")).bytes();
 const ID				= (new HoloHash("uhCEkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf")).bytes();
@@ -93,10 +95,21 @@ let bad_prop_entity_payload = {
     "content": {}
 };
 
+let primitive_entity_payload = {
+    "id": ID,
+    "header": HEADER,
+    "address": ADDRESS,
+    "type": {
+	"name": "some_other_entry_type",
+	"model": "noop",
+    },
+    "content": null
+};
+
 
 
 function basic_tests () {
-    it("should deconstruct 'entity' composition", async () => {
+    it("should construct Entity from payload", async () => {
 	let data			= new Entity( entity_payload );
 
 	expect( data			).to.be.an("Entity");
@@ -111,6 +124,26 @@ function basic_tests () {
 
 	expect( data.author		).to.be.instanceof( HoloHash );
 	expect( String(data.author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
+    });
+}
+
+function json_tests () {
+    it("should produce Entity data-interchange structure for Entity", async () => {
+	let data			= new Entity( entity_payload );
+
+	expect( data			).to.be.an("Entity");
+	expect( data.toJSON()		).to.deep.equal( entity_payload );
+    });
+
+    it("should produce Entity data-interchange structure for Collection", async () => {
+	let input			= {
+	    "base": (new HoloHash(AUTHOR)).toType("EntryHash").bytes(),
+	    "items": [ true ],
+	};
+	let list			= new Collection( input );
+
+	expect( list			).to.be.an("Collection");
+	expect( list.toJSON()		).to.deep.equal( input );
     });
 }
 
@@ -186,12 +219,23 @@ function errors_tests () {
 	    schema.deconstruct( "entity", bad_model_entity_payload );
 	}).to.throw( UnregisteredModelError, "registered models are: info" );
     });
+
+    it("should fail to deconstruct 'entity' with primitive value", async () => {
+	const schema			= new Architecture([
+	    SomeOtherType,
+	]);
+
+	expect( () => {
+	    schema.deconstruct( "entity", primitive_entity_payload );
+	}).to.throw( TypeError, "cannot be a primitive value; found content (object): null" );
+    });
 }
 
 
 describe("Compositions", () => {
 
     describe("Basic", basic_tests );
+    describe("JSON", json_tests );
     describe("Errors", errors_tests );
 
 });

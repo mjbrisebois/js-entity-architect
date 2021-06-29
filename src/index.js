@@ -43,6 +43,9 @@ class Entity {
 	if ( typeof data.type.model !== "string"  )
 	    throw new TypeError(`Entity expects [type.model] to be a string; not type '${typeof data.type.model}'`);
 
+	if ( typeof data.content !== "object" || data.content === null )
+	    throw new TypeError(`Entity content cannot be a primitive value; found content (${typeof data.content}): ${data.content}`);
+
 	Object.assign( this, data.content );
 
 	let $id				= new EntryHash(data.id);
@@ -53,17 +56,21 @@ class Entity {
 	define_hidden_prop( this, "$header",	$header );
 	define_hidden_prop( this, "$address",	$addr );
 	define_hidden_prop( this, "$addr",	$addr ); // alias to $address
+	define_hidden_prop( this, "$type",	data.type );
     }
 
     toJSON () {
-	return Object.assign({
-	    "$id":	String(this.$id),
-	    "$header":	String(this.$header),
-	    "$address":	String(this.$address),
-	}, this );
+	return {
+	    "id":	this.$id.bytes(),
+	    "header":	this.$header.bytes(),
+	    "address":	this.$address.bytes(),
+	    "type":	Object.assign( {}, this.$type ),
+	    "content":	Object.assign( {}, this ),
+	};
     }
 }
 set_tostringtag( Entity, "Entity" );
+
 
 class Collection extends Array {
     constructor ( ...args ) {
@@ -77,6 +84,21 @@ class Collection extends Array {
 	else {
 	    super( ...args );
 	}
+    }
+
+    slice () {
+	throw new Error(`Collection is not intended to by sliced; use <Collection>.items(start, end) to get a native Array`);
+    }
+
+    items ( ...args ) {
+	return Object.assign([], super.slice( ...args ));
+    }
+
+    toJSON () {
+	return {
+	    "base":	this.$base.bytes(),
+	    "items":	this.items(),
+	};
     }
 }
 set_tostringtag( Collection, "Collection" );
@@ -116,7 +138,7 @@ class Architecture {
 	}
 	else if ( composition === "entity_collection" ) {
 	    return new Collection( input )
-		.map( item => new Entity( item ) );
+		.map( item => this.deconstruct( "entity", item ) );
 	}
 	else if ( composition === "value" ) {
 	    return input;
