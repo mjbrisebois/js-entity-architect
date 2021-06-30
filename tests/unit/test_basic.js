@@ -38,6 +38,7 @@ const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pa
 const ID				= (new HoloHash("uhCEkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf")).bytes();
 const HEADER				= (new HoloHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuGLalIBa")).bytes();
 const ADDRESS				= (new HoloHash("uhCEkU7zcM5NFGXIljSHjJS3mk62FfVRpniZQlg6f92zWHkOZpb2z")).bytes();
+const BASE				= (new HoloHash(AUTHOR)).toType("EntryHash").bytes();
 
 let entity_payload = {
     "id": ID,
@@ -125,6 +126,24 @@ function basic_tests () {
 	expect( data.author		).to.be.instanceof( HoloHash );
 	expect( String(data.author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
     });
+
+    it("should deconstruct 'entity_collection' using schema", async () => {
+	const schema			= new Architecture([
+	    SomeType,
+	]);
+	let data			= schema.deconstruct( "entity_collection", {
+	    "base": BASE,
+	    "items": [
+		entity_payload,
+	    ],
+	});
+
+	expect( data.$base		).to.be.instanceof( HoloHash );
+	expect( String(data.$base)	).to.equal("uhCEkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
+
+	expect( data[0].author		).to.be.instanceof( HoloHash );
+	expect( String(data[0].author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
+    });
 }
 
 function json_tests () {
@@ -137,7 +156,7 @@ function json_tests () {
 
     it("should produce Entity data-interchange structure for Collection", async () => {
 	let input			= {
-	    "base": (new HoloHash(AUTHOR)).toType("EntryHash").bytes(),
+	    "base": BASE,
 	    "items": [ true ],
 	};
 	let list			= new Collection( input );

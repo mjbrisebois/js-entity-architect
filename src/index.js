@@ -137,8 +137,13 @@ class Architecture {
 	    return this.transform( input.type, new Entity( input ) );
 	}
 	else if ( composition === "entity_collection" ) {
-	    return new Collection( input )
-		.map( item => this.deconstruct( "entity", item ) );
+	    let list			= new Collection( input );
+
+	    list.forEach( (item,i) => {
+		list[i]			= this.deconstruct( "entity", item );
+	    });
+
+	    return list;
 	}
 	else if ( composition === "value" ) {
 	    return input;
