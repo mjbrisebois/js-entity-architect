@@ -5,6 +5,9 @@ module.exports = {
     target: 'node',
     mode: 'production', // production | development
     entry: [ './src/index.js' ],
+    resolve: {
+	mainFields: ["main"],
+    },
     output: {
 	filename: 'entity-architect.bundled.js',
 	globalObject: 'this',

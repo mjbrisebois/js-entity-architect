@@ -22,7 +22,7 @@
     "url": "https://github.com/mjbrisebois/js-entity-architect/"
   },
   "dependencies": {
-    "@whi/holo-hash": "^0.1.3"
+    "@whi/holo-hash": "^0.1.5"
   },
   "devDependencies": {
     "@whi/stdlog": "^0.3.4",
