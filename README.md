@@ -39,9 +39,16 @@ const { Architecture, EntityType } = require('@whi/entity-architect');
 
 const SomeType = new EntityType("some_type");
 
-SomeType.model("some_model", content => {
+// Catch-all symbol "*"
+SomeType.model("*", content => {
     content.published_at = new Date( content.published_at );
     content.last_updated = new Date( content.last_updated );
+
+    return content;
+});
+
+// This will run after the catch-all callback
+SomeType.model("some_model", content => {
     content.author = new AgentPubKey(content.author);
 
     return content;

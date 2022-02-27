@@ -8,6 +8,9 @@ node_modules:		package-lock.json
 	npm install
 	touch $@
 build:			node_modules
+use-npm-holo-hash:
+	npm uninstall @whi/holo-hash
+	npm i --save @whi/holo-hash
 
 
 #

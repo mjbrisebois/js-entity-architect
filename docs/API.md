@@ -112,6 +112,7 @@ Define a model by defining a transformation callback.
 
 - `id` - (*required*) a string identifier used as this model's name
   - must be unique for this `EntryType`
+  - Use `*` to match anything
 - `callback` - (*optional*) if present, must be a function that takes content and returns the
   transformed content.
   - defaults to `function (content) { return content; }`

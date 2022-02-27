@@ -195,10 +195,17 @@ class EntityType {
     }
 
     remodel ( id, content ) {
+	if ( this.remodelers["*"] )
+	    content			= this.remodelers["*"].call( this, content );
+
 	let remodeler			= this.remodelers[id];
 
-	if ( remodeler === undefined )
-	    throw new UnregisteredModelError(`Entity model '${id}' is not recognized; registered models are: ${Object.keys(this.remodelers)}`);
+	if ( remodeler === undefined ) {
+	    if ( this.remodelers["*"] === undefined )
+		throw new UnregisteredModelError(`Entity model '${id}' is not recognized; registered models are: ${Object.keys(this.remodelers)}`);
+	    else
+		return content;
+	}
 
 	debug && log("Remodeling '%s' content to '%s' model", this.name, id );
 	return remodeler.call( this, content );

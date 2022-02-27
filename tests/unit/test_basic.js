@@ -22,10 +22,13 @@ if ( process.env.LOG_LEVEL )
 
 
 const SomeType				= new EntityType("some_entry_type");
-
-SomeType.model("info", function (content) {
+SomeType.model("*", function (content) {
     content.published_at		= new Date( content.published_at );
     content.last_updated		= new Date( content.last_updated );
+
+    return content;
+});
+SomeType.model("info", function (content) {
     content.author			= new AgentPubKey(content.author);
 
     return content;
@@ -33,6 +36,7 @@ SomeType.model("info", function (content) {
 
 const SomeOtherType			= new EntityType("some_other_entry_type");
 SomeOtherType.model("noop");
+
 
 const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf")).bytes();
 const ID				= (new HoloHash("uhCEkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf")).bytes();
@@ -47,6 +51,20 @@ let entity_payload = {
     "type": {
 	"name": "some_entry_type",
 	"model": "info",
+    },
+    "content": {
+	"published_at": 1624661323383,
+	"last_updated": 1624661325451,
+	"author": AUTHOR,
+    }
+};
+let entity_payload_summary = {
+    "id": ID,
+    "header": HEADER,
+    "address": ADDRESS,
+    "type": {
+	"name": "some_entry_type",
+	"model": "summary",
     },
     "content": {
 	"published_at": 1624661323383,
@@ -70,7 +88,7 @@ let bad_model_entity_payload = {
     "header": HEADER,
     "address": ADDRESS,
     "type": {
-	"name": "some_entry_type",
+	"name": "some_other_entry_type",
 	"model": "summary",
     },
     "content": {}
@@ -123,6 +141,8 @@ function basic_tests () {
 	]);
 	let data			= schema.deconstruct( "entity", entity_payload );
 
+	expect( data.published_at	).to.be.instanceof( Date );
+	expect( data.last_updated	).to.be.instanceof( Date );
 	expect( data.author		).to.be.instanceof( HoloHash );
 	expect( String(data.author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
     });
@@ -141,6 +161,8 @@ function basic_tests () {
 	expect( data.$base		).to.be.instanceof( HoloHash );
 	expect( String(data.$base)	).to.equal("uhCEkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
 
+	expect( data[0].published_at	).to.be.instanceof( Date );
+	expect( data[0].last_updated	).to.be.instanceof( Date );
 	expect( data[0].author		).to.be.instanceof( HoloHash );
 	expect( String(data[0].author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
     });
@@ -221,8 +243,8 @@ function errors_tests () {
 
     it("should fail to register model because of duplicate name", async () => {
 	expect( () => {
-	    SomeType.model( "info" );
-	}).to.throw( DuplicateModelError, "'info' is already registered for type: some_entry_type" );
+	    SomeType.model( "*" );
+	}).to.throw( DuplicateModelError, "'*' is already registered for type: some_entry_type" );
     });
 
     it("should fail to deconstruct because invalid entity type", async () => {
@@ -234,9 +256,9 @@ function errors_tests () {
 
     it("should fail to deconstruct because invalid entity model", async () => {
 	expect( () => {
-	    const schema		= new Architecture([ SomeType ]);
+	    const schema		= new Architecture([ SomeOtherType ]);
 	    schema.deconstruct( "entity", bad_model_entity_payload );
-	}).to.throw( UnregisteredModelError, "registered models are: info" );
+	}).to.throw( UnregisteredModelError, "registered models are: noop" );
     });
 
     it("should fail to deconstruct 'entity' with primitive value", async () => {
