@@ -15,6 +15,7 @@ const { Architecture,
 	DuplicateModelError,
 	logging }		= require('../../src/index.js');
 const { HoloHash,
+	EntryHash, HeaderHash,
 	AgentPubKey }			= require('@whi/holo-hash');
 
 if ( process.env.LOG_LEVEL )
@@ -166,6 +167,15 @@ function basic_tests () {
 	expect( data[0].author		).to.be.instanceof( HoloHash );
 	expect( String(data[0].author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
     });
+
+    it("should deconstruct 'entity' with empty schema", async () => {
+	const schema			= new Architecture();
+	let data			= schema.deconstruct( "entity", entity_payload );
+
+	expect( data.$id		).to.be.instanceof( EntryHash );
+	expect( data.$addr		).to.be.instanceof( EntryHash );
+	expect( data.$header		).to.be.instanceof( HeaderHash );
+    });
 }
 
 function json_tests () {
@@ -201,8 +211,8 @@ function errors_tests () {
 
     it("should fail to construct Architecture because of invalid input", async () => {
 	expect( () => {
-	    new Architecture();
-	}).to.throw( TypeError, "to be an array; not type 'undefined'" );
+	    new Architecture( null );
+	}).to.throw( TypeError, "to be an array; not type 'object'" );
 
 	expect( () => {
 	    new Architecture([ SomeType, "invalid" ]);
@@ -213,12 +223,12 @@ function errors_tests () {
 	}).to.throw( TypeError, "item '1' is type 'null'" );
 
 	expect( () => {
-	    new Architecture([ SomeType, SomeType ]);
+	    new Architecture([ SomeType, SomeType ], { "strict": true });
 	}).to.throw( DuplicateTypeError, "'some_entry_type' is already registered" );
     });
 
     it("should fail to transform because of unregistered entity type", async () => {
-	const schema			= new Architecture([ SomeOtherType ]);
+	const schema			= new Architecture([ SomeOtherType ], { "strict": true });
 
 	expect( () => {
 	    schema.deconstruct( "entity", entity_payload );

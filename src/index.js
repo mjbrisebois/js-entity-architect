@@ -104,8 +104,14 @@ class Collection extends Array {
 set_tostringtag( Collection, "Collection" );
 
 
+const ARCHITECTURE_DEFAULT_OPTS		= {
+    "strict": false,
+};
+
 class Architecture {
-    constructor ( entity_types ) {
+    constructor ( entity_types = [], options ) {
+	this.options			= Object.assign( {}, ARCHITECTURE_DEFAULT_OPTS, options );
+
 	if ( !Array.isArray(entity_types) )
 	    throw new TypeError(`Architecture constructor expects input to be an array; not type '${typeof entity_types}'`);
 
@@ -161,10 +167,15 @@ class Architecture {
 
 	let type_class = this.entity_types[type.name];
 
-	if ( type_class === undefined )
-	    throw new UnregisteredTypeError(`Entity type '${type.name}' is not recognized; registered types are: ${Object.keys(this.entity_types)}`);
+	if ( type_class === undefined ) {
+	    if ( this.options.strict )
+		throw new UnregisteredTypeError(`Entity type '${type.name}' is not recognized; registered types are: ${Object.keys(this.entity_types)}`);
+	}
+	else {
+	    content			= type_class.remodel( type.model, content );
+	}
 
-	return type_class.remodel( type.model, content );
+	return content;
     }
 }
 set_tostringtag( Architecture, "Architecture" );
