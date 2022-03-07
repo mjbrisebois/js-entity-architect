@@ -172,7 +172,7 @@ class Architecture {
 		throw new UnregisteredTypeError(`Entity type '${type.name}' is not recognized; registered types are: ${Object.keys(this.entity_types)}`);
 	}
 	else {
-	    content			= type_class.remodel( type.model, content );
+	    content			= type_class.remodel( type.model, content, this );
 	}
 
 	return content;
@@ -205,9 +205,9 @@ class EntityType {
 	this.remodelers[id]		= callback;
     }
 
-    remodel ( id, content ) {
+    remodel ( id, content, architecture ) {
 	if ( this.remodelers["*"] )
-	    content			= this.remodelers["*"].call( this, content );
+	    content			= this.remodelers["*"].call( architecture, content );
 
 	let remodeler			= this.remodelers[id];
 
@@ -219,7 +219,7 @@ class EntityType {
 	}
 
 	debug && log("Remodeling '%s' content to '%s' model", this.name, id );
-	return remodeler.call( this, content );
+	return remodeler.call( architecture, content );
     }
 }
 set_tostringtag( EntityType, "EntityType" );

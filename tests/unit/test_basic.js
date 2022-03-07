@@ -34,6 +34,10 @@ SomeType.model("info", function (content) {
 
     return content;
 });
+SomeType.model("complex", function (content) {
+    content.some_entry			= this.deconstruct( "entity", content.some_entry );
+    return content;
+});
 
 const SomeOtherType			= new EntityType("some_other_entry_type");
 SomeOtherType.model("noop");
@@ -71,6 +75,19 @@ let entity_payload_summary = {
 	"published_at": 1624661323383,
 	"last_updated": 1624661325451,
 	"author": AUTHOR,
+    }
+};
+let complex_payload = {
+    "id": ID,
+    "header": HEADER,
+    "address": ADDRESS,
+    "type": {
+	"name": "some_entry_type",
+	"model": "complex",
+    },
+    "content": {
+	"name": "complex structure",
+	"some_entry": entity_payload,
     }
 };
 
@@ -144,8 +161,21 @@ function basic_tests () {
 
 	expect( data.published_at	).to.be.instanceof( Date );
 	expect( data.last_updated	).to.be.instanceof( Date );
-	expect( data.author		).to.be.instanceof( HoloHash );
+	expect( data.author		).to.be.instanceof( AgentPubKey );
 	expect( String(data.author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
+    });
+
+    it("should deconstruct a complex entity with embeded structures", async () => {
+	const schema			= new Architecture([
+	    SomeType,
+	]);
+	let data			= schema.deconstruct( "entity", complex_payload );
+
+	expect( data.$id		).to.be.instanceof( EntryHash );
+	expect( data.$addr		).to.be.instanceof( EntryHash );
+	expect( data.$header		).to.be.instanceof( HeaderHash );
+	expect( data.some_entry		).to.be.instanceof( Entity );
+	expect( data.some_entry.author	).to.be.instanceof( AgentPubKey );
     });
 
     it("should deconstruct 'entity_collection' using schema", async () => {
@@ -164,7 +194,7 @@ function basic_tests () {
 
 	expect( data[0].published_at	).to.be.instanceof( Date );
 	expect( data[0].last_updated	).to.be.instanceof( Date );
-	expect( data[0].author		).to.be.instanceof( HoloHash );
+	expect( data[0].author		).to.be.instanceof( AgentPubKey );
 	expect( String(data[0].author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
     });
 

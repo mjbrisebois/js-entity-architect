@@ -125,12 +125,13 @@ SomeType.model("some_model", function (content) {
 });
 ```
 
-### `<EntityType>.remodel( id, content )`
+### `<EntityType>.remodel( id, content, context )`
 Remodel the given `content` using the remodeler defined for `id`.
 
 - `id` - (*required*) a string identifier that was defined using `this.model(...)`
 - `content` - (*required*) the data to be remodeled.  Should match the structure expected by the
   registered callback.
+- `context` - (*optional*) the `this` context that will be used when calling remodelers
 
 Returns the transformed content.
 
