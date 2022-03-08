@@ -50,6 +50,35 @@ set_tostringtag( DuplicateTypeError, "DuplicateTypeError" );
 class DuplicateModelError extends EntityArchitectError {}
 set_tostringtag( DuplicateModelError, "DuplicateModelError" );
 
+class RemodelerError extends EntityArchitectError {}
+set_tostringtag( RemodelerError, "RemodelerError" );
+
+class DynamicError extends RemodelerError {
+    constructor( err ) {
+	super( err.message );
+
+	Object.defineProperty( this, "name", {
+	    "value": err.name,
+	    "writable": false,
+	});
+	Object.defineProperty( this, Symbol.toStringTag, {
+	    "value": this.name,
+	    "enumerable": false,
+	});
+
+	this.stack			= err.stack;
+	this.source_error		= err;
+    }
+
+    valueOf () {
+	return this.stack;
+    }
+
+    unwrap () {
+	throw this.source_error;
+    }
+}
+
 
 module.exports = {
     EntityArchitectError,
@@ -58,4 +87,6 @@ module.exports = {
     UnregisteredModelError,
     DuplicateTypeError,
     DuplicateModelError,
+    RemodelerError,
+    DynamicError,
 };

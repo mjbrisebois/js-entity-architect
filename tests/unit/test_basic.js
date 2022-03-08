@@ -13,6 +13,7 @@ const { Architecture,
 	UnregisteredModelError,
 	DuplicateTypeError,
 	DuplicateModelError,
+	RemodelerError,
 	logging }		= require('../../src/index.js');
 const { HoloHash,
 	EntryHash, HeaderHash,
@@ -37,6 +38,9 @@ SomeType.model("info", function (content) {
 SomeType.model("complex", function (content) {
     content.some_entry			= this.deconstruct( "entity", content.some_entry );
     return content;
+});
+SomeType.model("throw", function (content) {
+    throw new TypeError("Something is wrong");
 });
 
 const SomeOtherType			= new EntityType("some_other_entry_type");
@@ -309,6 +313,34 @@ function errors_tests () {
 	expect( () => {
 	    schema.deconstruct( "entity", primitive_entity_payload );
 	}).to.throw( TypeError, "cannot be a primitive value; found content (object): null" );
+    });
+
+    it("should fail because remodeler raised error", async () => {
+	let forced_error_payload = {
+	    "id": ID,
+	    "header": HEADER,
+	    "address": ADDRESS,
+	    "type": {
+		"name": "some_entry_type",
+		"model": "throw",
+	    },
+	    "content": {}
+	};
+	const schema			= new Architecture([
+	    SomeType,
+	]);
+
+	expect( () => {
+	    schema.deconstruct( "entity", forced_error_payload );
+	}).to.throw( RemodelerError, "Something is wrong" );
+
+	expect( () => {
+	    try {
+		schema.deconstruct( "entity", forced_error_payload );
+	    } catch (err) {
+		err.unwrap();
+	    }
+	}).to.throw( TypeError, "Something is wrong" );
     });
 }
 

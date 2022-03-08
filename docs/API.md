@@ -135,6 +135,9 @@ Remodel the given `content` using the remodeler defined for `id`.
 
 Returns the transformed content.
 
+Any errors thrown by a remodeler are wrapped in a `RemodelerError`.  The original error is available
+at `<Remodeler>.source_error` or it can be raised by calling `<RemodelerError>.unwrap()`.
+
 Example usage
 ```javascript
 SomeType.remodel( "some_model", content );

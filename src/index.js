@@ -9,7 +9,9 @@ const { EntityArchitectError,
 	UnregisteredTypeError,
 	UnregisteredModelError,
 	DuplicateTypeError,
-	DuplicateModelError  }		= require('./errors.js');
+	DuplicateModelError,
+	RemodelerError,
+	DynamicError }			= require('./errors.js');
 
 let debug				= false;
 
@@ -205,9 +207,17 @@ class EntityType {
 	this.remodelers[id]		= callback;
     }
 
-    remodel ( id, content, architecture ) {
+    run_remodeler ( fn, content, context ) {
+	try {
+	    return fn.call( context, content );
+	} catch ( err ) {
+	    throw new DynamicError( err );
+	}
+    }
+
+    remodel ( id, content, context ) {
 	if ( this.remodelers["*"] )
-	    content			= this.remodelers["*"].call( architecture, content );
+	    content			= this.run_remodeler( this.remodelers["*"], content, context );
 
 	let remodeler			= this.remodelers[id];
 
@@ -219,7 +229,7 @@ class EntityType {
 	}
 
 	debug && log("Remodeling '%s' content to '%s' model", this.name, id );
-	return remodeler.call( architecture, content );
+	return this.run_remodeler( remodeler, content, context );
     }
 }
 set_tostringtag( EntityType, "EntityType" );
@@ -237,6 +247,8 @@ module.exports = {
     UnregisteredModelError,
     DuplicateTypeError,
     DuplicateModelError,
+    RemodelerError,
+    DynamicError,
 
     HoloHash,
     EntryHash,
