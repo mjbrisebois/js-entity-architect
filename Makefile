@@ -52,8 +52,10 @@ clean-files-all-force:	clean-remove-chaff
 # NPM
 #
 prepare-package:
+	FILENAME=entity-architect.js WEBPACK_MODE=development npm run build
 	npm run build
-	gzip -kf dist/*.js
+	gzip -kc dist/entity-architect.js dist/entity-architect.js.map			> dist/entity-architect.gz
+	gzip -kc dist/entity-architect.prod.js dist/entity-architect.prod.js.map	> dist/entity-architect.prod.gz
 preview-package:	clean-files test prepare-package
 	npm pack --dry-run .
 create-package:		clean-files test prepare-package
