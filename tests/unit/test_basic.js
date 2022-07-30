@@ -16,7 +16,7 @@ const { Architecture,
 	RemodelerError,
 	logging }		= require('../../src/index.js');
 const { HoloHash,
-	EntryHash, HeaderHash,
+	EntryHash, ActionHash,
 	AgentPubKey }			= require('@whi/holo-hash');
 
 if ( process.env.LOG_LEVEL )
@@ -49,13 +49,13 @@ SomeOtherType.model("noop");
 
 const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf")).bytes();
 const ID				= (new HoloHash("uhCEkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf")).bytes();
-const HEADER				= (new HoloHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuGLalIBa")).bytes();
+const ACTION				= (new HoloHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuGLalIBa")).bytes();
 const ADDRESS				= (new HoloHash("uhCEkU7zcM5NFGXIljSHjJS3mk62FfVRpniZQlg6f92zWHkOZpb2z")).bytes();
 const BASE				= (new HoloHash(AUTHOR)).toType("EntryHash").bytes();
 
 let entity_payload = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"name": "some_entry_type",
@@ -69,7 +69,7 @@ let entity_payload = {
 };
 let entity_payload_summary = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"name": "some_entry_type",
@@ -83,7 +83,7 @@ let entity_payload_summary = {
 };
 let complex_payload = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"name": "some_entry_type",
@@ -97,7 +97,7 @@ let complex_payload = {
 
 let bad_type_entity_payload = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"model": "info",
@@ -107,7 +107,7 @@ let bad_type_entity_payload = {
 
 let bad_model_entity_payload = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"name": "some_other_entry_type",
@@ -127,7 +127,7 @@ let missing_prop_entity_payload = {
 
 let bad_prop_entity_payload = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"name": null,
@@ -138,7 +138,7 @@ let bad_prop_entity_payload = {
 
 let primitive_entity_payload = {
     "id": ID,
-    "header": HEADER,
+    "action": ACTION,
     "address": ADDRESS,
     "type": {
 	"name": "some_other_entry_type",
@@ -177,7 +177,7 @@ function basic_tests () {
 
 	expect( data.$id		).to.be.instanceof( EntryHash );
 	expect( data.$addr		).to.be.instanceof( EntryHash );
-	expect( data.$header		).to.be.instanceof( HeaderHash );
+	expect( data.$action		).to.be.instanceof( ActionHash );
 	expect( data.some_entry		).to.be.instanceof( Entity );
 	expect( data.some_entry.author	).to.be.instanceof( AgentPubKey );
     });
@@ -208,7 +208,7 @@ function basic_tests () {
 
 	expect( data.$id		).to.be.instanceof( EntryHash );
 	expect( data.$addr		).to.be.instanceof( EntryHash );
-	expect( data.$header		).to.be.instanceof( HeaderHash );
+	expect( data.$action		).to.be.instanceof( ActionHash );
     });
 }
 
@@ -318,7 +318,7 @@ function errors_tests () {
     it("should fail because remodeler raised error", async () => {
 	let forced_error_payload = {
 	    "id": ID,
-	    "header": HEADER,
+	    "action": ACTION,
 	    "address": ADDRESS,
 	    "type": {
 		"name": "some_entry_type",

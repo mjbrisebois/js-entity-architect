@@ -1,7 +1,7 @@
 
 const { HoloHash,
 	EntryHash,
-	HeaderHash,
+	ActionHash,
 	...holohashes }			= require('@whi/holo-hash');
 
 const { set_tostringtag }		= require('./utils.js');
@@ -33,7 +33,7 @@ function define_hidden_prop ( obj, key, value ) {
 }
 
 class Entity {
-    static REQUIRED_PROPERTIES		= ["id", "header", "address", "type", "content"];
+    static REQUIRED_PROPERTIES		= ["id", "action", "address", "type", "content"];
 
     constructor ( data ) {
 	if ( Entity.REQUIRED_PROPERTIES.map(key => typeof data[key]).includes("undefined") )
@@ -51,11 +51,11 @@ class Entity {
 	Object.assign( this, data.content );
 
 	let $id				= new EntryHash(data.id);
-	let $header			= new HeaderHash(data.header);
+	let $action			= new ActionHash(data.action);
 	let $addr			= new EntryHash(data.address);
 
 	define_hidden_prop( this, "$id",	$id );
-	define_hidden_prop( this, "$header",	$header );
+	define_hidden_prop( this, "$action",	$action );
 	define_hidden_prop( this, "$address",	$addr );
 	define_hidden_prop( this, "$addr",	$addr ); // alias to $address
 	define_hidden_prop( this, "$type",	data.type );
@@ -64,7 +64,7 @@ class Entity {
     toJSON () {
 	return {
 	    "id":	this.$id.bytes(),
-	    "header":	this.$header.bytes(),
+	    "action":	this.$action.bytes(),
 	    "address":	this.$address.bytes(),
 	    "type":	Object.assign( {}, this.$type ),
 	    "content":	Object.assign( {}, this ),
@@ -252,7 +252,7 @@ module.exports = {
 
     HoloHash,
     EntryHash,
-    HeaderHash,
+    ActionHash,
     ...holohashes,
 
     logging ( deep = false ) {
