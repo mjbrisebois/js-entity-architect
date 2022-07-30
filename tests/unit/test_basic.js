@@ -7,7 +7,6 @@ const expect				= require('chai').expect;
 const { Architecture,
 	EntityType,
 	Entity,
-	Collection,
 	EntityArchitectError,
 	UnregisteredTypeError,
 	UnregisteredModelError,
@@ -182,26 +181,6 @@ function basic_tests () {
 	expect( data.some_entry.author	).to.be.instanceof( AgentPubKey );
     });
 
-    it("should deconstruct 'entity_collection' using schema", async () => {
-	const schema			= new Architecture([
-	    SomeType,
-	]);
-	let data			= schema.deconstruct( "entity_collection", {
-	    "base": BASE,
-	    "items": [
-		entity_payload,
-	    ],
-	});
-
-	expect( data.$base		).to.be.instanceof( HoloHash );
-	expect( String(data.$base)	).to.equal("uhCEkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
-
-	expect( data[0].published_at	).to.be.instanceof( Date );
-	expect( data[0].last_updated	).to.be.instanceof( Date );
-	expect( data[0].author		).to.be.instanceof( AgentPubKey );
-	expect( String(data[0].author)	).to.equal("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf");
-    });
-
     it("should deconstruct 'entity' with empty schema", async () => {
 	const schema			= new Architecture();
 	let data			= schema.deconstruct( "entity", entity_payload );
@@ -218,17 +197,6 @@ function json_tests () {
 
 	expect( data			).to.be.an("Entity");
 	expect( data.toJSON()		).to.deep.equal( entity_payload );
-    });
-
-    it("should produce Entity data-interchange structure for Collection", async () => {
-	let input			= {
-	    "base": BASE,
-	    "items": [ true ],
-	};
-	let list			= new Collection( input );
-
-	expect( list			).to.be.an("Collection");
-	expect( list.toJSON()		).to.deep.equal( input );
     });
 }
 

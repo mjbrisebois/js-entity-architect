@@ -74,37 +74,6 @@ class Entity {
 set_tostringtag( Entity, "Entity" );
 
 
-class Collection extends Array {
-    constructor ( ...args ) {
-	if ( typeof args[0] === "object" && args[0] !== null
-	     && args[0].base !== undefined && args[0].items !== undefined ) {
-	    let input			= args[0];
-	    super( ...input.items );
-
-	    define_hidden_prop( this, "$base", new EntryHash(input.base) );
-	}
-	else {
-	    super( ...args );
-	}
-    }
-
-    slice () {
-	throw new Error(`Collection is not intended to by sliced; use <Collection>.items(start, end) to get a native Array`);
-    }
-
-    items ( ...args ) {
-	return Object.assign([], super.slice( ...args ));
-    }
-
-    toJSON () {
-	return {
-	    "base":	this.$base.bytes(),
-	    "items":	this.items(),
-	};
-    }
-}
-set_tostringtag( Collection, "Collection" );
-
 
 const ARCHITECTURE_DEFAULT_OPTS		= {
     "strict": false,
@@ -144,20 +113,8 @@ class Architecture {
 	if ( composition === "entity" ) {
 	    return this.transform( input.type, new Entity( input ) );
 	}
-	else if ( composition === "entity_collection" ) {
-	    let list			= new Collection( input );
-
-	    list.forEach( (item,i) => {
-		list[i]			= this.deconstruct( "entity", item );
-	    });
-
-	    return list;
-	}
 	else if ( composition === "value" ) {
 	    return input;
-	}
-	else if ( composition === "value_collection" ) {
-	    return new Collection( input );
 	}
 	else
 	    throw new Error(`Unknown composition: ${composition}`);
@@ -240,7 +197,6 @@ module.exports = {
     EntityType,
 
     Entity,
-    Collection,
 
     EntityArchitectError,
     UnregisteredTypeError,
