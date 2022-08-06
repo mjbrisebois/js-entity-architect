@@ -74,7 +74,6 @@ class Entity {
 set_tostringtag( Entity, "Entity" );
 
 
-
 const ARCHITECTURE_DEFAULT_OPTS		= {
     "strict": false,
 };
@@ -113,7 +112,13 @@ class Architecture {
 	if ( composition === "entity" ) {
 	    return this.transform( input.type, new Entity( input ) );
 	}
+	else if ( composition === "entity_collection" ) {
+	    return input.map( item => this.deconstruct("entity", item) );
+	}
 	else if ( composition === "value" ) {
+	    return input;
+	}
+	else if ( composition === "value_collection" ) {
 	    return input;
 	}
 	else
