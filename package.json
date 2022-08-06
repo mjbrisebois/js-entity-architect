@@ -1,6 +1,6 @@
 {
   "name": "@whi/entity-architect",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A Javascript library for deconstructing DNA responses according to the Entity specification",
   "main": "src/index.js",
   "browser": "dist/entity-architect.prod.js",
