@@ -52,98 +52,53 @@ const ACTION				= (new HoloHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuG
 const ADDRESS				= (new HoloHash("uhCEkU7zcM5NFGXIljSHjJS3mk62FfVRpniZQlg6f92zWHkOZpb2z")).bytes();
 const BASE				= (new HoloHash(AUTHOR)).toType("EntryHash").bytes();
 
-let entity_payload = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
-    "type": {
-	"name": "some_entry_type",
-	"model": "info",
-    },
-    "content": {
-	"published_at": 1624661323383,
-	"last_updated": 1624661325451,
-	"author": AUTHOR,
-    }
-};
-let entity_payload_summary = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
-    "type": {
-	"name": "some_entry_type",
-	"model": "summary",
-    },
-    "content": {
-	"published_at": 1624661323383,
-	"last_updated": 1624661325451,
-	"author": AUTHOR,
-    }
-};
-let complex_payload = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
-    "type": {
-	"name": "some_entry_type",
-	"model": "complex",
-    },
-    "content": {
-	"name": "complex structure",
-	"some_entry": entity_payload,
-    }
-};
+function add_entity_context ( obj ) {
+    return Object.assign( obj, {
+	"id": ID,
+	"action": ACTION,
+	"address": ADDRESS,
+    });
+}
+function new_entity ( type_name, type_model, content ) {
+    return add_entity_context({
+	"type": {
+	    "name": type_name,
+	    "model": type_model,
+	},
+	content,
+    });
+}
 
-let bad_type_entity_payload = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
+let entity_payload			= new_entity( "some_entry_type", "info", {
+    "published_at": 1624661323383,
+    "last_updated": 1624661325451,
+    "author": AUTHOR,
+});
+let entity_payload_summary		= new_entity( "some_entry_type", "summary", {
+    "published_at": 1624661323383,
+    "last_updated": 1624661325451,
+    "author": AUTHOR,
+});
+let complex_payload			= new_entity( "some_entry_type", "complex", {
+    "name": "complex structure",
+    "some_entry": entity_payload,
+});
+let bad_type_entity_payload		= add_entity_context({
     "type": {
 	"model": "info",
     },
     "content": {}
-};
-
-let bad_model_entity_payload = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
-    "type": {
-	"name": "some_other_entry_type",
-	"model": "summary",
-    },
-    "content": {}
-};
-
-let missing_prop_entity_payload = {
+});
+let bad_model_entity_payload		= new_entity( "some_other_entry_type", "summary", {} );
+let bad_prop_entity_payload		= new_entity( null, "summary", {} );
+let primitive_entity_payload		= new_entity( "some_other_entry_type", "noop", null );
+let missing_prop_entity_payload		= {
     "id": ID,
     "type": {
 	"name": "some_entry_type",
 	"model": "summary",
     },
     "content": {}
-};
-
-let bad_prop_entity_payload = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
-    "type": {
-	"name": null,
-	"model": "summary",
-    },
-    "content": {}
-};
-
-let primitive_entity_payload = {
-    "id": ID,
-    "action": ACTION,
-    "address": ADDRESS,
-    "type": {
-	"name": "some_other_entry_type",
-	"model": "noop",
-    },
-    "content": null
 };
 
 
@@ -298,16 +253,7 @@ function errors_tests () {
     });
 
     it("should fail because remodeler raised error", async () => {
-	let forced_error_payload = {
-	    "id": ID,
-	    "action": ACTION,
-	    "address": ADDRESS,
-	    "type": {
-		"name": "some_entry_type",
-		"model": "throw",
-	    },
-	    "content": {}
-	};
+	let forced_error_payload	= new_entity( "some_entry_type", "throw", {} );
 	const schema			= new Architecture([
 	    SomeType,
 	]);
