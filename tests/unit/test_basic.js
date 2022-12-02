@@ -32,10 +32,9 @@ const SomeOtherType			= new EntityType("some_other_entry_type");
 
 
 const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf")).bytes();
-const ID				= (new HoloHash("uhCEkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf")).bytes();
+const ID				= (new HoloHash("uhCkkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf")).bytes();
 const ACTION				= (new HoloHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuGLalIBa")).bytes();
 const ADDRESS				= (new HoloHash("uhCEkU7zcM5NFGXIljSHjJS3mk62FfVRpniZQlg6f92zWHkOZpb2z")).bytes();
-const BASE				= (new HoloHash(AUTHOR)).toType("EntryHash").bytes();
 
 function add_entity_context ( obj ) {
     return Object.assign( obj, {
@@ -99,7 +98,7 @@ function basic_tests () {
 	]);
 	let data			= schema.deconstruct( "entity", complex_payload );
 
-	expect( data.$id		).to.be.instanceof( EntryHash );
+	expect( data.$id		).to.be.instanceof( ActionHash );
 	expect( data.$addr		).to.be.instanceof( EntryHash );
 	expect( data.$action		).to.be.instanceof( ActionHash );
 	expect( data.some_entry		).to.be.instanceof( Entity );
@@ -124,7 +123,7 @@ function basic_tests () {
 	const schema			= new Architecture();
 	let data			= schema.deconstruct( "entity", entity_payload );
 
-	expect( data.$id		).to.be.instanceof( EntryHash );
+	expect( data.$id		).to.be.instanceof( ActionHash );
 	expect( data.$addr		).to.be.instanceof( EntryHash );
 	expect( data.$action		).to.be.instanceof( ActionHash );
     });
@@ -133,7 +132,7 @@ function basic_tests () {
 	const schema			= new Architecture([ SomeOtherType ], { "strict": true });
 	const data			= schema.deconstruct( "entity", other_entity_payload );
 
-	expect( data.$id		).to.be.instanceof( EntryHash );
+	expect( data.$id		).to.be.instanceof( ActionHash );
     });
 }
 

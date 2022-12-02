@@ -13,7 +13,7 @@ This module is intended to help transform DNA responses and reduce data clutter.
 integrate directly after a zome call and seamlessly restructure the contents to more GUI friendly
 formats.
 
-This is achieved by using `Object.definePropterty` to hide tracking values such as Entry/Header
+This is achieved by using `Object.definePropterty` to hide tracking values such as Entry/Action
 hashes.  It keeps the contextual information available, but out of the way.
 
 
@@ -21,7 +21,6 @@ hashes.  It keeps the contextual information available, but out of the way.
 
 - Modular architecture definitions for supporting multi-DNA GUIs
 - Automatically wrap an Entity's `HoloHash` properties using `@whi/holo-hash`
-- Transform Entity contents based on the type model
 - Detailed error classes for unexpected input
 
 
@@ -37,21 +36,9 @@ npm i @whi/entity-architect
 ```javascript
 const { Architecture, EntityType } = require('@whi/entity-architect');
 
-const SomeType = new EntityType("some_type");
-
-// Catch-all symbol "*"
-SomeType.model("*", content => {
+const SomeType = new EntityType("some_type", content => {
     content.published_at = new Date( content.published_at );
     content.last_updated = new Date( content.last_updated );
-
-    return content;
-});
-
-// This will run after the catch-all callback
-SomeType.model("some_model", content => {
-    content.author = new AgentPubKey(content.author);
-
-    return content;
 });
 
 
@@ -59,13 +46,13 @@ const schema = new Architecture([ SomeType ]);
 
 schema.deconstruct( "entity", {
     "id": Uint8Array [
-        132,  33,  36,  18, 241, 108, 143,  79,
+        132,  41,  36,  18, 241, 108, 143,  79,
          16, 118, 216,  34,  80,  48, 101,  18,
          28,  37, 113, 110, 101, 177, 250, 131,
         226, 242, 145, 113, 161, 136, 138, 180,
         129, 199,  69, 165, 236, 197,  95
     ],
-    "header": Uint8Array [
+    "action": Uint8Array [
         132,  41,  36, 159, 249,   8, 161, 177,
         222, 245, 155, 120, 125, 232, 123, 231,
          92,  30, 242,  96, 198, 200, 155, 129,
@@ -79,10 +66,7 @@ schema.deconstruct( "entity", {
         158,  38,  80, 150,  14, 159, 247, 108,
         214,  30,  67, 153, 165, 189, 179
     ],
-    "type": {
-        "name": "some_type",
-        "model": "some_model",
-    },
+    "type": "some_type",
     "content": {
         "published_at": 1624661323383,
         "last_updated": 1624661325451,
@@ -96,10 +80,10 @@ schema.deconstruct( "entity", {
     }
 });
 // {
-//     [$id]: EntryHash("uhCEkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf"),
-//     [$header]: HeaderHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuGLalIBa"),
+//     [$id]: ActionHash("uhCkkEvFsj08QdtgiUDBlEhwlcW5lsfqD4vKRcaGIirSBx0Wl7MVf"),
+//     [$action]: ActionHash("uhCkkn_kIobHe9Zt4feh751we8mDGyJuBXR50X5LBqtcSuGLalIBa"),
 //     [$address]: EntryHash("uhCEkU7zcM5NFGXIljSHjJS3mk62FfVRpniZQlg6f92zWHkOZpb2z"),
-//     [$type]: { "name": "some_type", "model": "some_model" },
+//     [$type]: "some_type",
 //
 //     "published_at": Date(1624661325451),
 //     "last_updated": Date(1624661325451),

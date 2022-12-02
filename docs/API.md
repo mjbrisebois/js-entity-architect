@@ -22,9 +22,7 @@ const { Architecture, EntityType,
 
     // Entity Architect Error classes
     UnregisteredTypeError,
-    UnregisteredModelError,
     DuplicateTypeError,
-    DuplicateModelError,
 
     // Export includes all exports from @whi/holo-hash
     ...require('@whi/holo-hash'),
@@ -52,13 +50,13 @@ Example usage
 ```javascript
 schema.deconstruct( "entity", {
     "id": Uint8Array [
-        132,  33,  36,  18, 241, 108, 143,  79,
+        132,  41,  36,  18, 241, 108, 143,  79,
          16, 118, 216,  34,  80,  48, 101,  18,
          28,  37, 113, 110, 101, 177, 250, 131,
         226, 242, 145, 113, 161, 136, 138, 180,
         129, 199,  69, 165, 236, 197,  95
     ],
-    "header": Uint8Array [
+    "action": Uint8Array [
         132,  41,  36, 159, 249,   8, 161, 177,
         222, 245, 155, 120, 125, 232, 123, 231,
          92,  30, 242,  96, 198, 200, 155, 129,
@@ -72,28 +70,20 @@ schema.deconstruct( "entity", {
         158,  38,  80, 150,  14, 159, 247, 108,
         214,  30,  67, 153, 165, 189, 179
     ],
-    "type": {
-        "name": "some_type",
-        "model": "some_model",
-    },
+    "type": "some_type",
     "content": any
 });
 ```
 
 
 ### `<Architecture>.transform( type, content )`
-Transform the given `content` using the corrosponding `EntityType` instance and defined model type.
+Transform the given `content` using the corrosponding `EntityType` instance.
 
-- `type` - (*required*) Entity type object
-  - `name` - (*required*) Entity type name
-  - `model` - (*required*) Entity type model ID
+- `type` - (*required*) Entity type name
 - `content` - (*required*) the data to be transformed.  Should match the expected content structure.
 
 ```javascript
-schema.transform({
-    "name": "some_type",
-    "model": "some_model",
-}, content )
+schema.transform("some_type", content )
 ```
 
 
@@ -107,40 +97,19 @@ Example usage
 const SomeType = new EntityType("some_type");
 ```
 
-### `<EntityType>.model( id, callback )`
-Define a model by defining a transformation callback.
 
-- `id` - (*required*) a string identifier used as this model's name
-  - must be unique for this `EntryType`
-  - Use `*` to match anything
-- `callback` - (*optional*) if present, must be a function that takes content and returns the
-  transformed content.
-  - defaults to `function (content) { return content; }`
+### `<EntityType>.remodel( content, context )`
+Remodel the given `content` using the remodeler.
 
-Example usage
-```javascript
-SomeType.model("some_model", function (content) {
-    ... // transformation
-    return content;
-});
-```
-
-### `<EntityType>.remodel( id, content, context )`
-Remodel the given `content` using the remodeler defined for `id`.
-
-- `id` - (*required*) a string identifier that was defined using `this.model(...)`
 - `content` - (*required*) the data to be remodeled.  Should match the structure expected by the
   registered callback.
 - `context` - (*optional*) the `this` context that will be used when calling remodelers
 
 Returns the transformed content.
 
-Any errors thrown by a remodeler are wrapped in a `RemodelerError`.  The original error is available
-at `<Remodeler>.source_error` or it can be raised by calling `<RemodelerError>.unwrap()`.
-
 Example usage
 ```javascript
-SomeType.remodel( "some_model", content );
+SomeType.remodel( content );
 ```
 
 
@@ -157,13 +126,13 @@ Example usage
 ```javascript
 let content = new Entity({
     "id": Uint8Array [
-        132,  33,  36,  18, 241, 108, 143,  79,
+        132,  41,  36,  18, 241, 108, 143,  79,
          16, 118, 216,  34,  80,  48, 101,  18,
          28,  37, 113, 110, 101, 177, 250, 131,
         226, 242, 145, 113, 161, 136, 138, 180,
         129, 199,  69, 165, 236, 197,  95
     ],
-    "header": Uint8Array [
+    "action": Uint8Array [
         132,  41,  36, 159, 249,   8, 161, 177,
         222, 245, 155, 120, 125, 232, 123, 231,
          92,  30, 242,  96, 198, 200, 155, 129,
@@ -177,10 +146,7 @@ let content = new Entity({
         158,  38,  80, 150,  14, 159, 247, 108,
         214,  30,  67, 153, 165, 189, 179
     ],
-    "type": {
-        "name": "some_type",
-        "model": "some_model",
-    },
+    "type": "some_type",
     "content": content
 });
 ```

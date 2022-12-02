@@ -44,7 +44,7 @@ class Entity {
 
 	Object.assign( this, data.content );
 
-	let $id				= new EntryHash(data.id);
+	let $id				= new ActionHash(data.id);
 	let $action			= new ActionHash(data.action);
 	let $addr			= new EntryHash(data.address);
 
