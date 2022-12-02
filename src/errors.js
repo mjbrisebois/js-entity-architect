@@ -41,19 +41,10 @@ set_tostringtag( EntityArchitectError, "EntityArchitectError" );
 class UnregisteredTypeError extends EntityArchitectError {}
 set_tostringtag( UnregisteredTypeError, "UnregisteredTypeError" );
 
-class UnregisteredModelError extends EntityArchitectError {}
-set_tostringtag( UnregisteredModelError, "UnregisteredModelError" );
-
 class DuplicateTypeError extends EntityArchitectError {}
 set_tostringtag( DuplicateTypeError, "DuplicateTypeError" );
 
-class DuplicateModelError extends EntityArchitectError {}
-set_tostringtag( DuplicateModelError, "DuplicateModelError" );
-
-class RemodelerError extends EntityArchitectError {}
-set_tostringtag( RemodelerError, "RemodelerError" );
-
-class DynamicError extends RemodelerError {
+class DynamicError extends EntityArchitectError {
     constructor( err ) {
 	super( err.message );
 
@@ -84,9 +75,6 @@ module.exports = {
     EntityArchitectError,
 
     UnregisteredTypeError,
-    UnregisteredModelError,
     DuplicateTypeError,
-    DuplicateModelError,
-    RemodelerError,
     DynamicError,
 };

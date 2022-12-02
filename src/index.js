@@ -7,10 +7,7 @@ const { HoloHash,
 const { set_tostringtag }		= require('./utils.js');
 const { EntityArchitectError,
 	UnregisteredTypeError,
-	UnregisteredModelError,
 	DuplicateTypeError,
-	DuplicateModelError,
-	RemodelerError,
 	DynamicError }			= require('./errors.js');
 
 let debug				= false;
@@ -39,11 +36,8 @@ class Entity {
 	if ( Entity.REQUIRED_PROPERTIES.map(key => typeof data[key]).includes("undefined") )
 	    throw new TypeError(`Entity data is missing one of the required properties (${Entity.REQUIRED_PROPERTIES})`);
 
-	if ( typeof data.type.name !== "string"  )
-	    throw new TypeError(`Entity expects [type.name] to be a string; not type '${typeof data.type.name}'`);
-
-	if ( typeof data.type.model !== "string"  )
-	    throw new TypeError(`Entity expects [type.model] to be a string; not type '${typeof data.type.model}'`);
+	if ( typeof data.type !== "string"  )
+	    throw new TypeError(`Entity expects [type] to be a string; not type '${typeof data.type}'`);
 
 	if ( typeof data.content !== "object" || data.content === null )
 	    throw new TypeError(`Entity content cannot be a primitive value; found content (${typeof data.content}): ${data.content}`);
@@ -66,7 +60,7 @@ class Entity {
 	    "id":	this.$id.bytes(),
 	    "action":	this.$action.bytes(),
 	    "address":	this.$address.bytes(),
-	    "type":	Object.assign( {}, this.$type ),
+	    "type":	this.$type,
 	    "content":	Object.assign( {}, this ),
 	};
     }
@@ -126,17 +120,17 @@ class Architecture {
     }
 
     transform ( type, content ) {
-	if ( typeof type.name !== "string" )
-	    throw new TypeError(`Transform expects [type.name] to be a string; not type '${typeof type.name}'`);
+	if ( typeof type !== "string" )
+	    throw new TypeError(`Transform expects [type] to be a string; not type '${typeof type}'`);
 
-	let type_class = this.entity_types[type.name];
+	let type_class = this.entity_types[type];
 
 	if ( type_class === undefined ) {
 	    if ( this.options.strict )
-		throw new UnregisteredTypeError(`Entity type '${type.name}' is not recognized; registered types are: ${Object.keys(this.entity_types)}`);
+		throw new UnregisteredTypeError(`Entity type '${type}' is not recognized; registered types are: ${Object.keys(this.entity_types)}`);
 	}
 	else {
-	    content			= type_class.remodel( type.model, content, this );
+	    content			= type_class.remodel( content, this ) || content;
 	}
 
 	return content;
@@ -146,27 +140,12 @@ set_tostringtag( Architecture, "Architecture" );
 
 
 class EntityType {
-    constructor ( name ) {
+    constructor ( name, remodeler ) {
 	if ( typeof name !== "string" )
 	    throw new TypeError(`EntityType constructor expects argument 0 to be a string; not type '${typeof name}'`);
 
 	this.name			= name;
-	this.remodelers			= {};
-    }
-
-    model ( id, callback ) {
-	if ( typeof id !== "string" )
-	    throw new TypeError(`EntityType model expects argument 0 to be a string; not type '${typeof id}'`);
-
-	if ( callback === undefined )
-	    callback			= (content => content);
-	else if ( typeof callback !== "function" )
-	    throw new TypeError(`EntityType model expects callback argument to be a function; not type '${typeof callback}'`);
-
-	if ( this.remodelers[id] !== undefined )
-	    throw new DuplicateModelError(`Model named '${id}' is already registered for type: ${this.name}`);
-
-	this.remodelers[id]		= callback;
+	this.remodeler			= remodeler || (() => {});
     }
 
     run_remodeler ( fn, content, context ) {
@@ -177,21 +156,9 @@ class EntityType {
 	}
     }
 
-    remodel ( id, content, context ) {
-	if ( this.remodelers["*"] )
-	    content			= this.run_remodeler( this.remodelers["*"], content, context );
-
-	let remodeler			= this.remodelers[id];
-
-	if ( remodeler === undefined ) {
-	    if ( this.remodelers["*"] === undefined )
-		throw new UnregisteredModelError(`Entity model '${id}' is not recognized; registered models are: ${Object.keys(this.remodelers)}`);
-	    else
-		return content;
-	}
-
-	debug && log("Remodeling '%s' content to '%s' model", this.name, id );
-	return this.run_remodeler( remodeler, content, context );
+    remodel ( content, context ) {
+	debug && log("Remodeling '%s' content", this.name );
+	return this.run_remodeler( this.remodeler, content, context );
     }
 }
 set_tostringtag( EntityType, "EntityType" );
@@ -205,10 +172,7 @@ module.exports = {
 
     EntityArchitectError,
     UnregisteredTypeError,
-    UnregisteredModelError,
     DuplicateTypeError,
-    DuplicateModelError,
-    RemodelerError,
     DynamicError,
 
     HoloHash,

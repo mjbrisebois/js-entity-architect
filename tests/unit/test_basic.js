@@ -9,11 +9,8 @@ const { Architecture,
 	Entity,
 	EntityArchitectError,
 	UnregisteredTypeError,
-	UnregisteredModelError,
 	DuplicateTypeError,
-	DuplicateModelError,
-	RemodelerError,
-	logging }		= require('../../src/index.js');
+	logging }			= require('../../src/index.js');
 const { HoloHash,
 	EntryHash, ActionHash,
 	AgentPubKey }			= require('@whi/holo-hash');
@@ -22,28 +19,16 @@ if ( process.env.LOG_LEVEL )
     logging();
 
 
-const SomeType				= new EntityType("some_entry_type");
-SomeType.model("*", function (content) {
-    content.published_at		= new Date( content.published_at );
-    content.last_updated		= new Date( content.last_updated );
+const SomeType				= new EntityType("some_entry_type", function (content) {
+    content.author		= new AgentPubKey(content.author);
+    content.published_at	= new Date( content.published_at );
+    content.last_updated	= new Date( content.last_updated );
 
-    return content;
-});
-SomeType.model("info", function (content) {
-    content.author			= new AgentPubKey(content.author);
-
-    return content;
-});
-SomeType.model("complex", function (content) {
-    content.some_entry			= this.deconstruct( "entity", content.some_entry );
-    return content;
-});
-SomeType.model("throw", function (content) {
-    throw new TypeError("Something is wrong");
+    if ( content.some_entry )
+	content.some_entry	= this.deconstruct( "entity", content.some_entry );
 });
 
 const SomeOtherType			= new EntityType("some_other_entry_type");
-SomeOtherType.model("noop");
 
 
 const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf")).bytes();
@@ -59,45 +44,30 @@ function add_entity_context ( obj ) {
 	"address": ADDRESS,
     });
 }
-function new_entity ( type_name, type_model, content ) {
+function new_entity ( type_name, content ) {
     return add_entity_context({
-	"type": {
-	    "name": type_name,
-	    "model": type_model,
-	},
+	"type": type_name,
 	content,
     });
 }
 
-let entity_payload			= new_entity( "some_entry_type", "info", {
+let entity_payload			= new_entity( "some_entry_type", {
     "published_at": 1624661323383,
     "last_updated": 1624661325451,
     "author": AUTHOR,
 });
-let entity_payload_summary		= new_entity( "some_entry_type", "summary", {
+let complex_payload			= new_entity( "some_entry_type", {
     "published_at": 1624661323383,
     "last_updated": 1624661325451,
     "author": AUTHOR,
-});
-let complex_payload			= new_entity( "some_entry_type", "complex", {
-    "name": "complex structure",
     "some_entry": entity_payload,
 });
-let bad_type_entity_payload		= add_entity_context({
-    "type": {
-	"model": "info",
-    },
-    "content": {}
-});
-let bad_model_entity_payload		= new_entity( "some_other_entry_type", "summary", {} );
-let bad_prop_entity_payload		= new_entity( null, "summary", {} );
-let primitive_entity_payload		= new_entity( "some_other_entry_type", "noop", null );
+let invalid_type_entity_payload		= new_entity( null, {} );
+let other_entity_payload		= new_entity( "some_other_entry_type", {});
+let primitive_entity_payload		= new_entity( "some_other_entry_type", null );
 let missing_prop_entity_payload		= {
     "id": ID,
-    "type": {
-	"name": "some_entry_type",
-	"model": "summary",
-    },
+    "type": "some_entry_type",
     "content": {}
 };
 
@@ -158,6 +128,13 @@ function basic_tests () {
 	expect( data.$addr		).to.be.instanceof( EntryHash );
 	expect( data.$action		).to.be.instanceof( ActionHash );
     });
+
+    it("should deconstruct 'entity' with no transformer", async () => {
+	const schema			= new Architecture([ SomeOtherType ], { "strict": true });
+	const data			= schema.deconstruct( "entity", other_entity_payload );
+
+	expect( data.$id		).to.be.instanceof( EntryHash );
+    });
 }
 
 function json_tests () {
@@ -176,8 +153,8 @@ function errors_tests () {
 	}).to.throw( TypeError, "Entity data is missing one of the required properties" );
 
 	expect( () => {
-	    new Entity( bad_prop_entity_payload );
-	}).to.throw( TypeError, "[type.name] to be a string; not type 'object'" );
+	    new Entity( invalid_type_entity_payload );
+	}).to.throw( TypeError, "[type] to be a string; not type 'object'" );
     });
 
     it("should fail to construct Architecture because of invalid input", async () => {
@@ -212,36 +189,6 @@ function errors_tests () {
 	}).to.throw( TypeError, "expects argument 0 to be a string; not type 'object'" );
     });
 
-    it("should fail to register model because of invalid input", async () => {
-	expect( () => {
-	    SomeType.model( null )
-	}).to.throw( TypeError, "expects argument 0 to be a string; not type 'object'" );
-
-	expect( () => {
-	    SomeType.model( "summary", null )
-	}).to.throw( TypeError, "argument to be a function; not type 'object'" );
-    });
-
-    it("should fail to register model because of duplicate name", async () => {
-	expect( () => {
-	    SomeType.model( "*" );
-	}).to.throw( DuplicateModelError, "'*' is already registered for type: some_entry_type" );
-    });
-
-    it("should fail to deconstruct because invalid entity type", async () => {
-	expect( () => {
-	    const schema		= new Architecture([ SomeType ]);
-	    schema.deconstruct( "entity", bad_type_entity_payload );
-	}).to.throw( TypeError, "[type.name] to be a string; not type 'undefined'" );
-    });
-
-    it("should fail to deconstruct because invalid entity model", async () => {
-	expect( () => {
-	    const schema		= new Architecture([ SomeOtherType ]);
-	    schema.deconstruct( "entity", bad_model_entity_payload );
-	}).to.throw( UnregisteredModelError, "registered models are: noop" );
-    });
-
     it("should fail to deconstruct 'entity' with primitive value", async () => {
 	const schema			= new Architecture([
 	    SomeOtherType,
@@ -250,25 +197,6 @@ function errors_tests () {
 	expect( () => {
 	    schema.deconstruct( "entity", primitive_entity_payload );
 	}).to.throw( TypeError, "cannot be a primitive value; found content (object): null" );
-    });
-
-    it("should fail because remodeler raised error", async () => {
-	let forced_error_payload	= new_entity( "some_entry_type", "throw", {} );
-	const schema			= new Architecture([
-	    SomeType,
-	]);
-
-	expect( () => {
-	    schema.deconstruct( "entity", forced_error_payload );
-	}).to.throw( RemodelerError, "Something is wrong" );
-
-	expect( () => {
-	    try {
-		schema.deconstruct( "entity", forced_error_payload );
-	    } catch (err) {
-		err.unwrap();
-	    }
-	}).to.throw( TypeError, "Something is wrong" );
     });
 }
 
