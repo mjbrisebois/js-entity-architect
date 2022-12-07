@@ -10,6 +10,7 @@ const { Architecture,
 	EntityArchitectError,
 	UnregisteredTypeError,
 	DuplicateTypeError,
+	RemodelerError,
 	logging }			= require('../../src/index.js');
 const { HoloHash,
 	EntryHash, ActionHash,
@@ -29,6 +30,10 @@ const SomeType				= new EntityType("some_entry_type", function (content) {
 });
 
 const SomeOtherType			= new EntityType("some_other_entry_type");
+
+const ThrowEntryType			= new EntityType("throw_entry_type", function () {
+    throw TypeError("Something is wrong");
+});
 
 
 const AUTHOR				= (new HoloHash("uhCAkocJKdTlSkQFVmjPW_lA_A5kusNOORPrFYJqT8134Pag45Vjf")).bytes();
@@ -64,6 +69,15 @@ let complex_payload			= new_entity( "some_entry_type", {
 let invalid_type_entity_payload		= new_entity( null, {} );
 let other_entity_payload		= new_entity( "some_other_entry_type", {});
 let primitive_entity_payload		= new_entity( "some_other_entry_type", null );
+let deprecated_entity_payload		= add_entity_context({
+    "type": {
+	"name": "old_type",
+	"model": "irrelevant",
+    },
+    "content": {
+	"message": "Hello world",
+    },
+});
 let missing_prop_entity_payload		= {
     "id": ID,
     "type": "some_entry_type",
@@ -134,6 +148,13 @@ function basic_tests () {
 
 	expect( data.$id		).to.be.instanceof( ActionHash );
     });
+
+    it("should deconstruct 'entity' with deprecated type name/model", async () => {
+	const schema			= new Architecture();
+	const data			= schema.deconstruct( "entity", deprecated_entity_payload );
+
+	expect( data.message		).to.equal("Hello world");
+    });
 }
 
 function json_tests () {
@@ -196,6 +217,25 @@ function errors_tests () {
 	expect( () => {
 	    schema.deconstruct( "entity", primitive_entity_payload );
 	}).to.throw( TypeError, "cannot be a primitive value; found content (object): null" );
+    });
+
+    it("should fail because remodeler raised error", async () => {
+	let forced_error_payload        = new_entity( "throw_entry_type", {} );
+	const schema                    = new Architecture([
+	    ThrowEntryType,
+	]);
+
+	expect( () => {
+	    schema.deconstruct( "entity", forced_error_payload );
+	}).to.throw( RemodelerError, "Something is wrong" );
+
+	expect( () => {
+	    try {
+		schema.deconstruct( "entity", forced_error_payload );
+	    } catch (err) {
+		err.unwrap();
+	    }
+	}).to.throw( TypeError, "Something is wrong" );
     });
 }
 

@@ -8,6 +8,7 @@ const { set_tostringtag }		= require('./utils.js');
 const { EntityArchitectError,
 	UnregisteredTypeError,
 	DuplicateTypeError,
+	RemodelerError,
 	DynamicError }			= require('./errors.js');
 
 let debug				= false;
@@ -36,6 +37,11 @@ class Entity {
 	if ( Entity.REQUIRED_PROPERTIES.map(key => typeof data[key]).includes("undefined") )
 	    throw new TypeError(`Entity data is missing one of the required properties (${Entity.REQUIRED_PROPERTIES})`);
 
+	if ( typeof data.type === "object" && data.type !== null ) {
+	    console.warn("DEPRECATION: Entity Architect name/model type object will not be supported in the future");
+	    data.type			= data.type.name;
+	}
+
 	if ( typeof data.type !== "string"  )
 	    throw new TypeError(`Entity expects [type] to be a string; not type '${typeof data.type}'`);
 
@@ -44,7 +50,7 @@ class Entity {
 
 	Object.assign( this, data.content );
 
-	let $id				= new ActionHash(data.id);
+	let $id				= new HoloHash(data.id);
 	let $action			= new ActionHash(data.action);
 	let $addr			= new EntryHash(data.address);
 
@@ -104,7 +110,7 @@ class Architecture {
 	debug && log("Parsed msg value (composition: %s): %s", composition, typeof input );
 
 	if ( composition === "entity" ) {
-	    return this.transform( input.type, new Entity( input ) );
+	    return this.transform( new Entity( input ) );
 	}
 	else if ( composition === "entity_collection" ) {
 	    return input.map( item => this.deconstruct("entity", item) );
@@ -119,7 +125,9 @@ class Architecture {
 	    throw new Error(`Unknown composition: ${composition}`);
     }
 
-    transform ( type, content ) {
+    transform ( entity ) {
+	let type			= entity.$type;
+
 	if ( typeof type !== "string" )
 	    throw new TypeError(`Transform expects [type] to be a string; not type '${typeof type}'`);
 
@@ -130,10 +138,10 @@ class Architecture {
 		throw new UnregisteredTypeError(`Entity type '${type}' is not recognized; registered types are: ${Object.keys(this.entity_types)}`);
 	}
 	else {
-	    content			= type_class.remodel( content, this ) || content;
+	    entity			= type_class.remodel( entity, this ) || entity;
 	}
 
-	return content;
+	return entity;
     }
 }
 set_tostringtag( Architecture, "Architecture" );
@@ -173,6 +181,7 @@ module.exports = {
     EntityArchitectError,
     UnregisteredTypeError,
     DuplicateTypeError,
+    RemodelerError,
     DynamicError,
 
     HoloHash,
